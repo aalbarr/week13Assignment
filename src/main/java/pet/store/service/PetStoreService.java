@@ -1,10 +1,15 @@
 package pet.store.service;
 
+import java.util.NoSuchElementException;
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import pet.store.controller.model.PetStoreData;
 import pet.store.dao.PetStoreDao;
+import pet.store.entity.PetStore;
 
 @Service
 public class PetStoreService {
@@ -13,10 +18,39 @@ public class PetStoreService {
 	private PetStoreDao petStoreDao;
 
 	public PetStoreData savePetStore(PetStoreData petStoreData) {
-		findOrCreatePetStore(petStoreId);
+		Long petStoreId = petStoreData.getPetStoreId();
 	
-		return petStoreData;
+		PetStore petStore = findOrCreatePetStore(petStoreId);
+		copyPetStoreFields(petStore, petStoreData);
+		
+		return new PetStoreData(petStoreDao.save(petStore));
+	}
+	//findOrCreatePetStore(petStoreData.getPetStoreId());
+
+	private void copyPetStoreFields(PetStore petStore, PetStoreData petStoreData) {
+		petStore.setPetStoreId(petStoreData.getPetStoreId());
+		petStore.setPetStoreName(petStoreData.getPetStoreName());
+		petStore.setPetStoreAddress(petStoreData.getPetStoreAddress());
+		petStore.setPetStoreCity(petStoreData.getPetStoreCity());
+		petStore.setPetStoreState(petStoreData.getPetStoreState());
+		petStore.setPetStoreZip(petStoreData.getPetStoreZip());
+		petStore.setPetStorePhoneNumber(petStoreData.getPetStorePhoneNumber());
 	}
 
+	private PetStore findOrCreatePetStore(Long petStoreId) {
+		PetStore petStore;
+		
+		if(Objects.isNull(petStoreId)) {
+			petStore = new PetStore();
+		}else {
+			petStore = findPetStoreById(petStoreId);
+		}
+		return petStore;
+	}
+
+	private PetStore findPetStoreById(Long petStoreId) {
+		return petStoreDao.findById(petStoreId)
+				.orElseThrow(() -> new NoSuchElementException("Pet Store with ID=" + petStoreId + " does not exist."));
+	}
 	
 }
