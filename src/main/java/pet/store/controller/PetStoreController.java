@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
 import pet.store.controller.model.PetStoreData;
+import pet.store.controller.model.PetStoreData.PetStoreEmployee;
 import pet.store.service.PetStoreService;
 
        //this annotation is a REST controller and expects and returns json
@@ -43,5 +44,13 @@ public class PetStoreController {
 		log.info("Changing Pet Store Id {}", petStoreData);
 		return petStoreService.savePetStore(petStoreData);
 		
+	}
+	
+	@PostMapping("/pet_store/{petStoreId}/employee")
+	@ResponseStatus(code = HttpStatus.CREATED)
+	public PetStoreEmployee insertPetStoreEmployeeData(@PathVariable Long petStoreId, 
+			PetStoreEmployee petStoreEmployee){
+		log.info("Adding employee {} to Pet Store {}", petStoreEmployee, petStoreId);
+		return PetStoreService.saveEmployee(petStoreId, petStoreEmployee);
 	}
 }
