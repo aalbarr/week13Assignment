@@ -46,11 +46,11 @@ public class PetStoreController {
 		
 	}
 	
-	@PostMapping("/pet_store/{petStoreId}/employee")
+	@PostMapping("/ps/{petStoreId}/employee")
 	@ResponseStatus(code = HttpStatus.CREATED)
 	public PetStoreEmployee insertPetStoreEmployeeData(@PathVariable Long petStoreId, 
-			PetStoreEmployee petStoreEmployee){
+			@RequestBody PetStoreEmployee petStoreEmployee){
 		log.info("Adding employee {} to Pet Store {}", petStoreEmployee, petStoreId);
-		return PetStoreService.saveEmployee(petStoreId, petStoreEmployee);
+		return petStoreService.saveEmployee(petStoreId, petStoreEmployee);
 	}
 }
