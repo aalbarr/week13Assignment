@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import pet.store.controller.model.PetStoreData;
+import pet.store.controller.model.PetStoreData.PetStoreCustomer;
 import pet.store.controller.model.PetStoreData.PetStoreEmployee;
+import pet.store.dao.CustomerDao;
 import pet.store.dao.EmployeeDao;
 import pet.store.dao.PetStoreDao;
+import pet.store.entity.Customer;
 import pet.store.entity.Employee;
 import pet.store.entity.PetStore;
 
@@ -22,6 +25,9 @@ public class PetStoreService {
 
 	@Autowired
 	private EmployeeDao employeeDao;
+	
+	@Autowired
+	private CustomerDao customerDao;
 
 	public PetStoreData savePetStore(PetStoreData petStoreData) {
 		Long petStoreId = petStoreData.getPetStoreId();
@@ -99,6 +105,54 @@ public class PetStoreService {
 		employee.setEmployeeLastName(petStoreEmployee.getEmployeeLastName());
 		employee.setEmployeePhone(petStoreEmployee.getEmployeePhone());
 		employee.setEmployeeJobTitle(petStoreEmployee.getEmployeeJobTitle());
+		
+	}
+
+	//this method will save a customer and info into a pet store
+	@Transactional(readOnly = false)
+	public PetStoreCustomer saveCustomer(Long petStoreId, PetStoreCustomer petStoreCustomer) {
+				PetStore petStore = findPetStoreById(petStoreId);
+				Long petStoreCusId = petStoreCustomer.getCustomerId();
+				Customer customer = findOrCreateCustomer(petStoreCusId, petStoreId);
+				copyCustomerFields(customer, petStoreCustomer);
+				customer.getPetStores().add(petStore);
+				petStore.getCustomers().add(customer);
+				return new PetStoreCustomer(customerDao.save(customer));
+	}
+	
+	private Customer findCustomerById(Long petStoreId, Long customerId) {
+		Customer customer = customerDao.findById(customerId)
+				.orElseThrow(() -> new NoSuchElementException("Customer ID=" + customerId + " does not exist."));
+		
+		boolean test = false;
+		for(PetStore petStore : customer.getPetStores()) {
+			if(petStore.getPetStoreId() == petStoreId) {
+				test = true;
+				break;
+			}else {
+				throw new IllegalArgumentException("Pet Store Id=" + petStoreId + 
+						"does not match this customer's ID, " + customerId);
+			}
+			
+		}return customer;
+	}
+	
+	private Customer findOrCreateCustomer(Long customerId, Long petStoreId) {
+		Customer customer;
+		
+		if (Objects.isNull(petStoreId)) {
+			customer = new Customer();
+		}else {
+			customer = findCustomerById(petStoreId, customerId);
+		}
+		return customer;
+	}
+
+	private void copyCustomerFields(Customer customer, PetStoreCustomer petStoreCustomer) {
+		customer.setCustomerEmail(petStoreCustomer.getCustomerEmail());
+		customer.setCustomerFirstName(petStoreCustomer.getCustomerFirstName());
+		customer.setCustomerLastName(petStoreCustomer.getCustomerLastName());
+		customer.setCustomerId(petStoreCustomer.getCustomerId());
 		
 	}
 
